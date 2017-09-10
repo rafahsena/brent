@@ -34,4 +34,9 @@ public class OrganizadorBrent implements IFileOrganizer {
     public Aluno delAluno(long matric) {
         return null;
     }
+
+    @Override
+    public void addReg(Aluno p){
+
+    }
 }

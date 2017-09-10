@@ -34,6 +34,8 @@ public interface IFileOrganizer {
      * @return Enem.index.Aluno que foi excluído.
      */
     public Aluno delAluno(long matric);
+
+    public void addReg(Aluno p);
 }
 
  
