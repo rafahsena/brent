@@ -23,10 +23,10 @@ public interface IBrentOrganizer {
     
     /**
      * TODO - Função que calcula quantidade de incrementos em posição.
-     * @param hash
+     * @param matricula
      * @return
      */
-    public long getIncremento(long hash);
+    public long getIncremento(long matricula);
     
     /**
      * TODO - Este método irá verificar a nova posição de um registro caso aja

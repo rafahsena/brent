@@ -151,7 +151,7 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
 
         long posicao = -1;
         long contador;
-        long repeticoes = (long) (this.canal.size() / tamanhoRegistro);
+        long repeticoes = (this.canal.size() / tamanhoRegistro);
 
         for(contador=0; contador < repeticoes; contador++){
             this.canal.read(bb, contador*tamanhoRegistro);
@@ -175,10 +175,10 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
     }
 
     @Override
-    public long getIncremento(long hash) {
-        return (hash % tamanhoTabela-2) + 1;
+    public long getIncremento(long matricula) {
+        //return (this.getHash(matricula) % (tamanhoTabela-2))+1;
+        return this.getHash((matricula/tamanhoTabela));
     }
-
     @Override
     public long contarSaltos(long posicaoAtual, long qtdSaltos, long incremento) {
 
