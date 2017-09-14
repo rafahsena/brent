@@ -62,11 +62,37 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
 
         try {
             long tamanhoCanal = this.canal.size() / tamanhoTabela;
-            if(tamanhoCanal == 0){
+            long hash = getHash(aluno.getMatricula());
+            //Lê a posição do hash no arquivo
+            this.canal.read(bbtmp,hash*200);
+            alunoTmp = Conversor.toAluno(bbtmp);
+            //Limpa o ByteBuffer e converte o aluno passado como parâmetro
+            bbtmp.clear();
+            bbtmp = Conversor.toByteBuffer(aluno);
+
+            /*if(tamanhoCanal == 0){
                 this.canal.write(Conversor.toByteBuffer(aluno));
+            }*/
+
+            //Verifica se a posição do arquivo está vazia
+            if(alunoTmp.getMatricula() <= 0){
+                //Se estiver salva o aluno na posição
+                this.canal.write(bbtmp,hash);
             }
             else{
-                long posicaoReg = this.calcularPosicao(tamanhoTabela, aluno);
+                //Se não estiver, conta qual dos 2 exige menos pulos e faz a troca
+                int pulosAluno = contaPulos(aluno, hash, getIncremento(aluno.getMatricula()));
+                int pulosAlunoTmp = contaPulos(alunoTmp, getHash(alunoTmp.getMatricula()),getIncremento(alunoTmp.getMatricula()));
+                if(pulosAlunoTmp <= pulosAluno){
+                    this.canal.write(bbtmp,(hash + (getIncremento(aluno.getMatricula())*pulosAluno))*200);
+                }
+                else{
+                    ByteBuffer tmp;
+                    tmp = Conversor.toByteBuffer(alunoTmp);
+                    this.canal.write(tmp,(hash + (getIncremento(aluno.getMatricula())*pulosAlunoTmp))*200);
+                    this.canal.write(bbtmp,hash*200);
+                }
+               // long posicaoReg = this.calcularPosicao(tamanhoTabela, aluno);
 
 
 
@@ -88,6 +114,7 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
 
 
             }
+
         } catch (IOException e) {
             System.out.println("Ocorreu um erro ao adicionar o aluno");
             e.printStackTrace();
@@ -200,6 +227,27 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
         bb.position((int)posicao);
         Aluno a = Conversor.toAluno(bb);
         return a.getMatricula() <= 0;
+    }
+
+    public int contaPulos (Aluno aluno, long hash, long incremento){
+        ByteBuffer bbtmp = ByteBuffer.allocate(Aluno.tamanho);
+        Aluno alunoTmp;
+        int contador = 0;
+        try {
+            do {
+                hash += incremento;
+                contador++;
+                bbtmp.clear();
+                bbtmp.put(new byte[200]);
+                bbtmp.position(0);
+                this.canal.read(bbtmp, hash * 200);
+                alunoTmp = Conversor.toAluno(bbtmp);
+            } while (alunoTmp.getMatricula() > 0);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return contador;
     }
 
 }
