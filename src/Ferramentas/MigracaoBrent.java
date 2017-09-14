@@ -1,10 +1,13 @@
-package Enem.index;
+package Ferramentas;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import Ordenador.IFileOrganizer;
+import ENEM.Aluno;
+import Organizador.OrganizadorBrent;
 
 public class MigracaoBrent{
 
@@ -26,7 +29,7 @@ public class MigracaoBrent{
             Aluno a = Conversor.toAluno(buff);
 
             // Inserir no destino
-            org.addReg(a);
+            //org.addReg(a);
         }
         channelOrigem.close();
     }
