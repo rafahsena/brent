@@ -27,12 +27,20 @@ public interface IFileOrganizer {
   */
  public Aluno getAluno(long matric);
 
- /**
-  * Dado um número de matrícula, localiza e exclui o registro do
+ /** 
+  * TODO Dado um número de matrícula, localiza e exclui o registro do
   * arquivo de alunos que corresponde à matrícula
   * fornecida.
   * @param matric Matrícula do aluno a ser excluído.
   * @return Aluno que foi excluído.
  */
+ 
  public Aluno delAluno(long matric);
+
+ /**
+  * DONE Pega todos os alunos.
+  */
+  public void getAll();
+ 
+ 
 }

@@ -1,7 +1,6 @@
 package Ferramentas;
 
 import ENEM.Aluno;
-import ENEM.Aluno;
 import java.nio.ByteBuffer;
 
 /**
@@ -43,7 +42,7 @@ public class Conversor {
     public static Aluno toAluno(ByteBuffer bb){
         bb.clear();
         /*
-            matricula, nome, ria, email, curso
+            matricula, nome, rua, email, curso
         */
         Aluno a = new Aluno();
         short curso;
@@ -54,7 +53,7 @@ public class Conversor {
         byte[] b_email = new byte[50];
         /**************************/
         mat = bb.getLong(0);
-        System.out.println(mat);
+        // System.out.println(mat);
         bb.position(8);
         //nome = new String(bb.get(b_nome));
         bb.get(b_nome);
