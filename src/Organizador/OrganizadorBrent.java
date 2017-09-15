@@ -45,7 +45,7 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
             verificarAluno = Conversor.toAluno(bb);
             mat = verificarAluno.getMatricula();
             if(mat > 0){
-                System.out.println("posicao " + posicao + " ocupada\n");
+                System.out.println("posicao " + posicao + " ocupada ("+posicao/tamanhoTabela+")\n");
                 posicao = -1;
             }
         }while(posicao <= 0);
@@ -55,8 +55,6 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
 
     @Override
     public void addAluno(Aluno aluno) {
-        long atualPos = 0;
-        boolean aqui = false;
         Aluno alunoTmp;
         ByteBuffer bbtmp = ByteBuffer.allocate((int)tamanhoRegistro);
 
@@ -70,59 +68,33 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
             alunoTmp = Conversor.toAluno(bbtmp);
             //Limpa o ByteBuffer e converte o aluno passado como parâmetro
             bbtmp.clear();
+            bbtmp.put(new byte[200]);
+            bbtmp.position(0);
             bbtmp = Conversor.toByteBuffer(aluno);
-            System.out.println("Aluno temporario: \n" + alunoTmp);
-
-            /*if(tamanhoCanal == 0){
-                this.canal.write(Conversor.toByteBuffer(aluno));
-            }*/
-
+            
             //Verifica se a posição do arquivo está vazia
             if(this.canal.size() <= 0 || alunoTmp.getMatricula() <= 0){
                 //Se estiver salva o aluno na posição
                 this.canal.write(bbtmp, escreverEmPosicaoTabela);
-                System.out.println("Entrou em mat <= 0:  " + hash + " posicao" +
-                        escreverEmPosicaoTabela);
             }
             else{
-                System.out.println("entrou em mat > 0");
                 //Se não estiver, conta qual dos 2 exige menos pulos e faz a troca
                 long matAluno = aluno.getMatricula();
                 long matTmp = alunoTmp.getMatricula();
                 int pulosAluno = contaPulos(aluno, hash, getIncremento(matAluno));
-                System.out.println("saltos Aluno " + pulosAluno);
-                System.out.println("Aluno temporario: \n" + alunoTmp);
                 int pulosAlunoTmp = contaPulos(alunoTmp, getHash(matTmp),getIncremento(matTmp));
-                System.out.println("saltos Tempr " + pulosAlunoTmp);
-                if(pulosAlunoTmp <= pulosAluno){
-                    this.canal.write(bbtmp,(hash + (getIncremento(matTmp)*pulosAluno))*tamanhoRegistro);
+                
+                if(pulosAlunoTmp >= pulosAluno){
+                    long posicao = (hash + (getIncremento(matAluno)*pulosAluno));
+                    this.canal.write(bbtmp,getHash(posicao)*tamanhoRegistro);
                 }
                 else{
                     ByteBuffer tmp;
                     tmp = Conversor.toByteBuffer(alunoTmp);
-                    this.canal.write(tmp,(hash + (getIncremento(matAluno)*pulosAlunoTmp))*tamanhoRegistro);
-                    this.canal.write(bbtmp,hash*tamanhoRegistro);
+                    long posicao = (hash + (getIncremento(matTmp)*pulosAlunoTmp));
+                    this.canal.write(tmp,getHash(posicao)*tamanhoRegistro);
+                    this.canal.write(bbtmp,getHash(hash)*tamanhoRegistro);
                 }
-               // long posicaoReg = this.calcularPosicao(tamanhoTabela, aluno);
-
-
-
-                /*
-                do{
-                    this.canal.read(bbtmp, atualPos*tamanhoRegistro);
-                    posicaoReg = this.getHash(posicaoReg);
-
-                    if(this.armazenamentoVazio(bbtmp, posicaoReg)){
-                        this.canal.write(bbtmp, posicaoReg);
-
-                    }else{
-                        bbtmp.position(0);
-                        posicaoReg = this.getIncremeto(posicaoReg);
-                        atualPos = atualPos + posicaoReg;
-                    }
-
-                }while (tamanhoCanal > atualPos && !aqui);*/
-
 
             }
 
@@ -162,7 +134,7 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
                 canal.read(temp,i);
                 teste = Conversor.toAluno(temp);
                 if(!(teste.getMatricula() <= 0)){
-                    System.out.println("\nposicao " + i + "\n"+teste);
+                    System.out.println("\nposicao " + i + " ("+(i/tamanhoRegistro)+")\n"+teste);
                 }
                 temp.clear();
                 temp.put(new byte[200]);
@@ -265,9 +237,9 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
         Aluno alunoTmp;
         int contador = 0;
         try {
-            System.out.println("\nincrementa: " + incremento);
             do {
                 hash += incremento;
+                hash = (hash > tamanhoTabela) ? this.getHash(hash) : hash;
                 ++contador;
                 bbtmp.clear();
                 bbtmp.put(new byte[(int)tamanhoRegistro]);
