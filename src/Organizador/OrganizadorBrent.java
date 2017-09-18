@@ -107,18 +107,29 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
     @Override
     public Aluno getAluno(long matricula){
         Aluno a = null; //new Aluno();
-        long posicao;
+        long hash = getHash(matricula);
+        long posicao = hash;
+        ByteBuffer bb = ByteBuffer.allocate((int)tamanhoRegistro);
+        boolean achou = false;
         try {
-            posicao = this.getPosition(matricula);
-            //long tamanho = this.canal.size();
-            if(posicao >= 0){
-                // matricula, nome,       rua,        email,     curso
-                // long        string     string      string     short
-                //  8                                              2
-                ByteBuffer bb = ByteBuffer.allocate((int) tamanhoRegistro);
-                this.canal.read(bb, posicao);
-                bb.position(0); //this.canal.write(bb, 0);
-                a = Conversor.toAluno(bb);
+            this.canal.read(bb, hash*tamanhoRegistro);
+            a = Conversor.toAluno(bb);
+            if(a.getMatricula() == matricula){
+                return a;
+            }
+            else{
+                long incremento = getIncremento(matricula);
+                do{
+                    bb.clear();
+                    bb.put(new byte[(int)tamanhoRegistro]);
+                    bb.flip();
+                    posicao += incremento;
+                    this.canal.read(bb,posicao);
+                    a = Conversor.toAluno(bb);
+                    if(a.getMatricula() == matricula)
+                        achou = true;
+                }
+                while(!achou && posicao != hash);
             }
         } catch (IOException ex) {
             System.err.println("Erro ao pegar matricula.");
@@ -208,28 +219,6 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
     public long getIncremento(long matricula) {
         //return (this.getHash(matricula) % (tamanhoTabela-2))+1;
         return this.getHash((long)(matricula/tamanhoTabela));
-    }
-    @Override
-    public long contarSaltos(long posicaoAtual, long qtdSaltos, long incremento) {
-
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public ByteBuffer trocarRegistro(Aluno aluno, long posicaoAtual) {
-
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean armazenamentoVazio(ByteBuffer bb, long posicao) {
-        return false;
-    }
-
-    public boolean espacoVazio(ByteBuffer bb, long posicao) {
-        bb.position((int)posicao);
-        Aluno a = Conversor.toAluno(bb);
-        return a.getMatricula() <= 0;
     }
 
     public int contaPulos (Aluno aluno, long hash, long incremento){
