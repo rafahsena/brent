@@ -114,22 +114,29 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
         try {
             this.canal.read(bb, hash*tamanhoRegistro);
             a = Conversor.toAluno(bb);
+            if(matricula < 1){
+                return null;
+            }
             if(a.getMatricula() == matricula){
                 return a;
             }
             else{
                 long incremento = getIncremento(matricula);
+                long iniciou = hash;
                 do{
                     bb.clear();
                     bb.put(new byte[(int)tamanhoRegistro]);
                     bb.flip();
                     posicao += incremento;
-                    this.canal.read(bb,posicao);
+                    posicao = getHash(posicao);
+                    this.canal.read(bb,posicao*tamanhoRegistro);
                     a = Conversor.toAluno(bb);
                     if(a.getMatricula() == matricula)
                         achou = true;
                 }
                 while(!achou && posicao != hash);
+                if(!achou) a = null;
+                return a;
             }
         } catch (IOException ex) {
             System.err.println("Erro ao pegar matricula.");
@@ -159,28 +166,56 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
 
     @Override
     public Aluno delAluno(long matricula){
-        Aluno aluno = null;
-        try{
-            long position = this.getPosition(matricula);
-            if(position >= 0){
-                long tam = this.canal.size();
-                aluno = this.getAluno(matricula);
-                ByteBuffer bb = ByteBuffer.allocate((int) tamanhoRegistro);
-                for(long pos = position + tamanhoRegistro; pos < tam; pos += tamanhoRegistro){
-                    this.canal.position(pos);
-                    this.canal.read(bb);
-                    bb.flip();
-                    this.canal.write(bb, pos - tamanhoRegistro);
-                    bb.clear();
-                }
-                this.canal.truncate(tam - tamanhoRegistro);
-
+        Aluno a = null; //new Aluno();
+        long hash = getHash(matricula);
+        long posicao = hash;
+        ByteBuffer bb = ByteBuffer.allocate((int)tamanhoRegistro);
+        boolean achou = false;
+        try {
+            if(matricula < 1){
+                return a;
             }
-        }catch(Exception ex){
-            System.err.println("Erro ao deletar aluno");
-        }
+            bb.position(0);
+            this.canal.read(bb, hash*tamanhoRegistro);
+            bb.position(0);
+            a = Conversor.toAluno(bb);
+            if(a.getMatricula() == matricula){
+                bb.position(0);
+                Aluno b = new Aluno((long)-1,a.getNome(),a.getRua(),a.getEmail(),a.getCurso());
+                bb = Conversor.toByteBuffer(b);
+                this.canal.write(bb, hash*tamanhoRegistro);
+                return a;
+            }
+            else{
+                long incremento = getIncremento(matricula);
+                long iniciou = hash;
+                do{
+                    bb.position(0);
+                    bb.clear();
+                    bb.put(new byte[(int)tamanhoRegistro]);
+                    bb.flip();
+                    posicao += incremento;
+                    posicao = getHash(posicao);
+                    bb.position(0);
+                    long calcPosAtual = posicao*tamanhoRegistro;
+                    this.canal.read(bb,calcPosAtual);
+                    bb.position(0);
+                    a = Conversor.toAluno(bb);
+                    if(a.getMatricula() == matricula){
+                        Aluno b = new Aluno((long)-1,a.getNome(),a.getRua(),a.getEmail(),a.getCurso());
+                        this.canal.write(Conversor.toByteBuffer(b),calcPosAtual);
+                        return a;
+                    }
 
-        return aluno;
+                }
+                while(!achou && posicao != hash);
+                if(!achou) a = null;
+                return a;
+            }
+        } catch (IOException ex) {
+            System.err.println("Erro ao pegar matricula.");
+        }
+        return a;
     }
     
    
