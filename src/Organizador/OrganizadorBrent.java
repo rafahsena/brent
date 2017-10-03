@@ -12,7 +12,7 @@ import java.nio.channels.FileChannel;
 public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
     private FileChannel canal;
     private long tamanhoRegistro = Aluno.tamanho;
-    private long tamanhoTabela = (long)11;//((long)120000017);
+    private long tamanhoTabela = ((long)12000017); //(long)11;//
 
     public OrganizadorBrent() {
     }
@@ -188,7 +188,7 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
             }
             else{
                 long incremento = getIncremento(matricula);
-                long iniciou = hash;
+                int contador = 0;
                 do{
                     bb.position(0);
                     bb.clear();
@@ -201,6 +201,7 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
                     this.canal.read(bb,calcPosAtual);
                     bb.position(0);
                     a = Conversor.toAluno(bb);
+                    contador++;
                     if(a.getMatricula() == matricula){
                         Aluno b = new Aluno((long)-1,a.getNome(),a.getRua(),a.getEmail(),a.getCurso());
                         this.canal.write(Conversor.toByteBuffer(b),calcPosAtual);
@@ -208,7 +209,7 @@ public class OrganizadorBrent implements IFileOrganizer, IBrentOrganizer{
                     }
 
                 }
-                while(!achou && posicao != hash);
+                while(!achou && posicao != hash && contador < 200);
                 if(!achou) a = null;
                 return a;
             }
